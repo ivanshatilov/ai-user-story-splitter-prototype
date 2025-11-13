@@ -14,3 +14,7 @@ export const aiStorySplitterWorkflowOutputSchema = z.object({
   output: z.string(),
   storySplitResult: StorySplitResultSchema,
 });
+
+export const aiStorySplitterWorkflowInputSchema = z.object({
+    prompt: z.string(),
+  })
