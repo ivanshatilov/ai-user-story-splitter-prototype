@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  mastra:
+    build:
+      context: ./mastra
+      dockerfile: Dockerfile
+    env_file:
+    - ./.env
+    ports:
+      - "${MASTRA_PORT:-4111}:4111"
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file:
+    - ./.env
+    ports:
+      - "${API_PORT-3000}:3000"
+    depends_on:
+      - mastra
