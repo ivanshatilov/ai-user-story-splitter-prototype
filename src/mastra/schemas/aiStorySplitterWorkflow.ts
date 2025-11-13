@@ -10,6 +10,8 @@ export const RatedTasksSchema = z.object({
   tasks: z.array(TaskSchema).nullable(),
 });
 
+export type RatedTasks = z.infer<typeof RatedTasksSchema>;
+
 export const aiStorySplitterWorkflowOutputSchema = z.object({
   output: z.string(),
   storySplitResult: RatedTasksSchema,

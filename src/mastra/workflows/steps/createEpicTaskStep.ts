@@ -1,10 +1,11 @@
 import { createStep } from "@mastra/core";
 import { taskCreationIntentStepOutputSchema } from "../../schemas/taskCreationIntentStep";
-import { aiStorySplitterWorkflowOutputSchema, RatedTasksSchema } from "../../schemas/aiStorySplitterWorkflow";
+import { aiStorySplitterWorkflowOutputSchema, RatedTasks, RatedTasksSchema } from "../../schemas/aiStorySplitterWorkflow";
 import { getRateSplittedTasksPrompt, getSplitUserStoryIntoEpicAndTasksPrompt } from "../../prompts/workflows/createEpicTaskStepPrompts";
 import { PinoLogger } from "@mastra/loggers";
 import { extractFirstJson } from "../../utils/jsonUtils";
-import { splittedTasksSchema } from "../../schemas/createEpicTaskStep";
+import { splittedTasks, splittedTasksSchema } from "../../schemas/createEpicTaskStep";
+import { Agent } from "@mastra/core/agent";
 
 const logger = new PinoLogger({
   name: "createEpicTaskStep",
@@ -28,6 +29,21 @@ export const createEpicTaskStep = createStep({
       throw new Error("Agent not found");
     }
 
+    const splittedUserStory = await splitUserStoryIntoTasks(agent, prompt)
+
+    const refinedTasksJson = await getEpicWithRatedTasks(agent, splittedUserStory)
+
+    return {
+      output: `Вот твой эпик "${refinedTasksJson.epic}". Я разбил его на ${refinedTasksJson.tasks ? refinedTasksJson.tasks.length : 0} подзадач.`,
+      storySplitResult: {
+        epic: refinedTasksJson.epic,
+        tasks: refinedTasksJson.tasks,
+      },
+    };
+  },
+});
+
+export const splitUserStoryIntoTasks = async (agent: Agent, prompt: string): Promise<splittedTasks> => {
     const splitUserStoryPrompt = getSplitUserStoryIntoEpicAndTasksPrompt(prompt);
 
     const splitUserStoryResponse = await agent.stream([
@@ -44,14 +60,17 @@ export const createEpicTaskStep = createStep({
 
     const splittedTasksJson = splittedTasksSchema.parse(extractFirstJson(splitUserStoryText));
 
-    // 2) Второй проход — короткие task-имена + complexity 1–3
-    const splittedTasks = splittedTasksJson.tasks;
+    return splittedTasksJson
+}
+
+export const getEpicWithRatedTasks = async (agent: Agent, splittedUserStory: splittedTasks): Promise<RatedTasks> => {
+    const splittedTasks = splittedUserStory.tasks;
 
     if (splittedTasks.length === 0) {
       throw new Error("No detailed tasks provided to refine");
     }
 
-    const rateSplittedTasksPrompt = getRateSplittedTasksPrompt(splittedTasksJson.epic, splittedTasks);
+    const rateSplittedTasksPrompt = getRateSplittedTasksPrompt(splittedUserStory.epic, splittedTasks);
 
     const refineTasksResponse = await agent.stream([
       { role: "user", content: rateSplittedTasksPrompt },
@@ -65,12 +84,5 @@ export const createEpicTaskStep = createStep({
 
     const refinedTasksJson = RatedTasksSchema.parse(extractFirstJson(refineTasksText));
 
-    return {
-      output: `Вот твой эпик "${refinedTasksJson.epic}". Я разбил его на ${refinedTasksJson.tasks ? refinedTasksJson.tasks.length : 0} подзадач.`,
-      storySplitResult: {
-        epic: refinedTasksJson.epic,
-        tasks: refinedTasksJson.tasks,
-      },
-    };
-  },
-});
+    return refinedTasksJson
+}
