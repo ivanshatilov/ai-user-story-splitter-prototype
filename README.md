@@ -20,7 +20,7 @@
 
 ---
 
-## Запуск проекта
+## Запуск проекта с mastra для отладки
 
 Предварительно должен быть установлен Git и Node.js + npm
 
@@ -36,26 +36,17 @@
 
 ---
 
-## Структура проекта
+## Запуск проекта с docker-compose
+
+Предварительно должен быть установлен docker desktop
+В корне проекта должен быть .env с введенными переменными окружения
+
+1) Склонировать репозиторий с помощью ```git clone```
+2) Перейти в проект ```cd ai-user-story-splitter```
+3) ```docker compose up -d```
+
+Доступен эндпоинт ```POST http://localhost:${API_PORT}/api/story-split```. На вход передается JSON body:
 
 ```
-.
-│
-├── src
-│   └── mastra
-│       ├── agents/          # Агенты
-│       ├── prompts/         # Файлы с промптами
-│       ├── schemas/         # Zod-схемы входных/выходных данных
-│       ├── scorers/         # Скореры
-│       ├── tests/           # Тестовые прогоны workflow
-│       ├── utils/           # Утилиты
-│       ├── workflows/
-│       │   ├── steps/       # Отдельные шаги workflow
-│       │   └── story-split-workflow.ts
-│       └── index.ts
-│ 
-├── .env.example
-├── .gitignore
-├── package.json
-├── README.md
+{"prompt": "string"}
 ```
