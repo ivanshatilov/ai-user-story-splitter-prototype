@@ -6,6 +6,7 @@ import { PinoLogger } from "@mastra/loggers";
 import { extractFirstJson } from "../../utils/jsonUtils";
 import { splittedTasks, splittedTasksSchema } from "../../schemas/createEpicTaskStep";
 import { Agent } from "@mastra/core/agent";
+import { streamAgentResponse } from "../../utils/agentUtils";
 
 const logger = new PinoLogger({
   name: "createEpicTaskStep",
@@ -46,15 +47,9 @@ export const createEpicTaskStep = createStep({
 export const splitUserStoryIntoTasks = async (agent: Agent, prompt: string): Promise<splittedTasks> => {
     const splitUserStoryPrompt = getSplitUserStoryIntoEpicAndTasksPrompt(prompt);
 
-    const splitUserStoryResponse = await agent.stream([
+    let splitUserStoryText = await streamAgentResponse(agent, [
       { role: "user", content: splitUserStoryPrompt },
-    ]);
-
-    let splitUserStoryText = "";
-    for await (const chunk of splitUserStoryResponse.textStream) {
-      process.stdout.write(chunk);
-      splitUserStoryText += chunk;
-    }
+    ])
 
     logger.info(`Split user story text: ${splitUserStoryText}`);
 
@@ -72,15 +67,9 @@ export const getEpicWithRatedTasks = async (agent: Agent, splittedUserStory: spl
 
     const rateSplittedTasksPrompt = getRateSplittedTasksPrompt(splittedUserStory.epic, splittedTasks);
 
-    const refineTasksResponse = await agent.stream([
+    const refineTasksText = await streamAgentResponse(agent, [
       { role: "user", content: rateSplittedTasksPrompt },
-    ]);
-
-    let refineTasksText = "";
-    for await (const chunk of refineTasksResponse.textStream) {
-      refineTasksText += chunk;
-      process.stdout.write(chunk);
-    }
+    ])
 
     const refinedTasksJson = RatedTasksSchema.parse(extractFirstJson(refineTasksText));
 

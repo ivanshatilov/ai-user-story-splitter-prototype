@@ -2,6 +2,7 @@ import { createStep } from "@mastra/core";
 import { taskCreationIntentStepOutputSchema } from "../../schemas/taskCreationIntentStep";
 import { aiStorySplitterWorkflowOutputSchema } from "../../schemas/aiStorySplitterWorkflow";
 import { smallTalkStepPrompt } from "../../prompts/workflows/smallTalkStepPrompts";
+import { streamAgentResponse } from "../../utils/agentUtils";
 
 
 export const smallTalkStep = createStep({
@@ -23,16 +24,10 @@ export const smallTalkStep = createStep({
 
     const smallTalkPrompt = smallTalkStepPrompt(prompt);
 
-    const response = await agent.stream([
+    let responseText = await streamAgentResponse(agent, [
       { role: "user", content: smallTalkPrompt },
-    ]);
-
-    let responseText = "";
-    for await (const chunk of response.textStream) {
-      responseText += chunk;
-      process.stdout.write(chunk);
-    }
-
+    ])
+    
     return {
       output: responseText,
       storySplitResult: {
