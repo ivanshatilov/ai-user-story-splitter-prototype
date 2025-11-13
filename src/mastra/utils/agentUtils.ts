@@ -6,7 +6,7 @@ export const streamAgentResponse = async (agent: any, messages: any[]) => {
 
     let text = "";
     for await (const chunk of response.textStream) {
-      process.stdout.write(chunk);
+      //process.stdout.write(chunk);
       text += chunk;
     }
 

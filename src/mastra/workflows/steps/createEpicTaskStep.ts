@@ -51,8 +51,6 @@ export const splitUserStoryIntoTasks = async (agent: Agent, prompt: string): Pro
       { role: "user", content: splitUserStoryPrompt },
     ])
 
-    logger.info(`Split user story text: ${splitUserStoryText}`);
-
     const splittedTasksJson = splittedTasksSchema.parse(extractFirstJson(splitUserStoryText));
 
     return splittedTasksJson
