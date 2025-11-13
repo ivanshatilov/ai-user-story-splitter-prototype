@@ -5,14 +5,14 @@ const TaskSchema = z.object({
   complexity: z.number().int().min(1).max(3),
 });
 
-const StorySplitResultSchema = z.object({
+export const RatedTasksSchema = z.object({
   epic: z.string().nullable(),
   tasks: z.array(TaskSchema).nullable(),
 });
 
 export const aiStorySplitterWorkflowOutputSchema = z.object({
   output: z.string(),
-  storySplitResult: StorySplitResultSchema,
+  storySplitResult: RatedTasksSchema,
 });
 
 export const aiStorySplitterWorkflowInputSchema = z.object({
