@@ -17,6 +17,6 @@ services:
     env_file:
     - ./.env
     ports:
-      - "${API_PORT-3000}:3000"
+      - "${API_PORT:-3000}:3000"
     depends_on:
       - mastra
